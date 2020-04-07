@@ -16,7 +16,12 @@ typedef struct
 typedef struct
 {
 	int x,y,w,h;
-} Ledge;
+} LedgeSide;
+
+typedef struct
+{
+	int x, y, w, h;
+} LedgeLong;
 
 typedef struct
 {
@@ -30,11 +35,12 @@ typedef struct
 	//tanks
 	Tank tanks[100];
 	//ledges
-	Ledge ledges[100];
+	LedgeSide ledges[100];
 
 	//Images
 	SDL_Texture *tank;
-	SDL_Texture *brick;
+	SDL_Texture *brickSide;
+	SDL_Texture *brickLong;
 	
 	//Renderer
 	SDL_Renderer *renderer;
@@ -55,58 +61,87 @@ void loadGame(GameState *game)
 	game->tank = SDL_CreateTextureFromSurface(game->renderer, surface);
 	SDL_FreeSurface(surface);
 
-	surface = IMG_Load("ledge.png");
-	game->brick = SDL_CreateTextureFromSurface(game->renderer, surface);
+	surface = IMG_Load("fenceRed.png");
+	game->brickSide = SDL_CreateTextureFromSurface(game->renderer, surface);
 	SDL_FreeSurface(surface);
 
-	game->man.x = 320 - 40;
-	game->man.y = 240 - 40;
+	surface = IMG_Load("fenceRedlong.png");
+	game->brickLong = SDL_CreateTextureFromSurface(game->renderer, surface);
+	SDL_FreeSurface(surface);
+
+	game->man.x = 320;
+	game->man.y = 240;
 
 	//init ledeges
-		game->ledges[0].w = 10;
-		game->ledges[0].h = 80;
+		game->ledges[0].w = 100;
+		game->ledges[0].h = 20;
 		game->ledges[0].x = 400;
-		game->ledges[0].y = 0;
-		game->ledges[1].w = 80;
-		game->ledges[1].h = 10;
-		game->ledges[1].x = 400;
-		game->ledges[1].y = 80;
-		game->ledges[2].w = 10;
-		game->ledges[2].h = 80;
-		game->ledges[2].x = 470;
-		game->ledges[2].y = 160;
-		game->ledges[3].w = 10;
-		game->ledges[3].h = 80;
-		game->ledges[3].x = 470;
-		game->ledges[3].y = 240;
-		game->ledges[4].w = 80;
-		game->ledges[4].h = 10;
-		game->ledges[4].x = 470;
-		game->ledges[4].y = 160;
-		game->ledges[5].w = 80;
-		game->ledges[5].h = 10;
-		game->ledges[5].x = 470;
-		game->ledges[5].y = 380;
-		game->ledges[6].w = 80;
-		game->ledges[6].h = 10;
-		game->ledges[6].x = 390;
-		game->ledges[6].y = 380;
-		game->ledges[7].w = 80;
-		game->ledges[7].h = 10;
-		game->ledges[7].x = 320;
-		game->ledges[7].y = 380;
-		game->ledges[8].w = 10;
-		game->ledges[8].h = 80;
-		game->ledges[8].x = 250;
-		game->ledges[8].y = 310;
-		game->ledges[9].w = 10;
-		game->ledges[9].h = 80;
-		game->ledges[9].x = 230;
-		game->ledges[9].y = 220;
+		game->ledges[0].y = 85;
 
+		game->ledges[49].w = 20;
+		game->ledges[49].h = 90;
+		game->ledges[49].x = 250;
+		game->ledges[49].y = 0;
 
+		game->ledges[50].w = 20;
+		game->ledges[50].h = 90;
+		game->ledges[50].x = 490;
+		game->ledges[50].y = 103;
 
+		game->ledges[1].w = 100;
+		game->ledges[1].h = 20;
+		game->ledges[1].x = 580;
+		game->ledges[1].y = 103;
 
+		game->ledges[51].w = 20;
+		game->ledges[51].h = 90;
+		game->ledges[51].x = 490;
+		game->ledges[51].y = 280;
+
+		game->ledges[2].w = 100;
+		game->ledges[2].h = 20;
+		game->ledges[2].x = 395;
+		game->ledges[2].y = 363;
+
+		game->ledges[3].w = 100;
+		game->ledges[3].h = 20;
+		game->ledges[3].x = 260;
+		game->ledges[3].y = 260;
+
+		game->ledges[4].w = 100;
+		game->ledges[4].h = 20;
+		game->ledges[4].x = 260;
+		game->ledges[4].y = 170;
+
+		game->ledges[52].w = 20;
+		game->ledges[52].h = 90;
+		game->ledges[52].x = 245;
+		game->ledges[52].y = 180;
+
+		game->ledges[53].w = 20;
+		game->ledges[53].h = 90;
+		game->ledges[53].x = 355;
+		game->ledges[53].y = 180;
+
+		game->ledges[5].w = 100;
+		game->ledges[5].h = 20;
+		game->ledges[5].x = 120;
+		game->ledges[5].y = 363;
+
+		game->ledges[6].w = 100;
+		game->ledges[6].h = 20;
+		game->ledges[6].x = 0;
+		game->ledges[6].y = 170;
+
+		game->ledges[54].w = 20;
+		game->ledges[54].h = 90;
+		game->ledges[54].x = 90;
+		game->ledges[54].y = 180;
+
+		game->ledges[7].w = 100;
+		game->ledges[7].h = 20;
+		game->ledges[7].x = 160;
+		game->ledges[7].y = 90;
 }
 
 void collisionDetect(GameState *game)
@@ -147,13 +182,15 @@ void collisionDetect(GameState *game)
 			if (my < by + bh && my > by)
 			{
 				//correct y
-				game->man.y = by+bh;
+				game->man.y = by+ bh;
+
 			}
 			//are we landing on the ledge
 			else if(my+ mh > by && my < by)
 			{
 				//correct y
-				game->man.y = by -mh;
+				game->man.y = by-mh;
+				
 			}
 		}
 	}
@@ -227,10 +264,15 @@ void doRender(SDL_Renderer *renderer, GameState *game)
 	//set the drawing color to white
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-	for(int i=0;i<100;i++)
+	for(int i=0;i<49;i++)
 	{
 		SDL_Rect ledgeRect = {game->ledges[i].x,game->ledges[i].y,game->ledges[i].w,game->ledges[i].h};
-		SDL_RenderCopy(renderer,game->brick,NULL,&ledgeRect);
+		SDL_RenderCopy(renderer,game->brickSide,NULL,&ledgeRect);
+	}
+	for (int i = 49;i<100;i++)
+	{
+		SDL_Rect ledgeRect = { game->ledges[i].x,game->ledges[i].y,game->ledges[i].w,game->ledges[i].h };
+		SDL_RenderCopy(renderer, game->brickLong, NULL, &ledgeRect);
 	}
 
 	SDL_Rect rect = { game->man.x, game->man.y,48,48};
