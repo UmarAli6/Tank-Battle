@@ -288,7 +288,6 @@ int main(void)
 		// wait 1/60th of a second
 		SDL_Delay(10000 / 60);
 	}
-
 	// clean up resources before exiting
 	SDL_DestroyTexture(tex);
 	SDL_DestroyTexture(tex2);
