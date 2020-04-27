@@ -1,33 +1,63 @@
 #include "bullet.h"
+#include "tank.h"
 
 #define PUBLIC /* empty */
 #define PRIVATE static
 
 struct Bullet_type {
-	int BULLET_POSITION_X;
-	int BULLET_POSITION_Y;
-	int speed;
-	int bouncesLeft;
+	float BULLET_POSITION_X;
+	float BULLET_POSITION_Y;
+	float BULLET_DY;
+	float BULLET_DX;
+	float BULLET_ANGLE;
 };
 
-PUBLIC Bullet createBullet(int x, int y) {
+PUBLIC Bullet createBullet(float x, float y, float dy, float dx, float a) {
 	Bullet b = malloc(sizeof(struct Bullet_type));
 	b->BULLET_POSITION_X = x;
 	b->BULLET_POSITION_Y = y;
-	b->speed = 1;
-	b->bouncesLeft = 4;
+	b->BULLET_DY = dy * -8;
+	b->BULLET_DX = dx * -8;
+	b->BULLET_ANGLE = a;
 	return b;
 }
 
-PUBLIC int getBulletPositionX(Bullet b) {
+PUBLIC void updateBulletPositionX(Bullet b, float x)
+{
+	b->BULLET_POSITION_X += x;
+}
+
+PUBLIC float getBulletPositionX(Bullet b) {
 	return b->BULLET_POSITION_X;
 }
 
-PUBLIC int getBulletPositionY(Bullet b) {
+PUBLIC void updateBulletPositionY(Bullet b, float y)
+{
+	b->BULLET_POSITION_Y += y;
+}
+
+PUBLIC float getBulletPositionY(Bullet b) {
 	return b->BULLET_POSITION_Y;
 }
 
-PUBLIC int destroyBullet(Bullet b) {
-	free(b);
-	return 1;
+PUBLIC void destroyBullet(Bullet *bullets[], int i) {
+	free(bullets[i]);
+	bullets[i] = NULL;
 }
+
+PUBLIC float getBulletDx(Bullet b)
+{
+	return b->BULLET_DX;
+}
+
+PUBLIC float getBulletDy(Bullet b)
+{
+	return b->BULLET_DY;
+}
+
+PUBLIC float getBulletAngle(Bullet b)
+{
+	return b->BULLET_ANGLE;
+}
+
+
