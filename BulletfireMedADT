@@ -89,7 +89,8 @@ int main(int argc, char *argv[])
 	{
 		if (gameState.bullets[i] != NULL)
 		{
-			destroyBullet(&gameState.bullets[i], i);
+			destroyBullet(gameState.bullets[i],i);
+			gameState.bullets[i] = NULL;
 		}
 	}
 
@@ -238,58 +239,19 @@ void collisionDetect(GameState *game)
 		if (game->bullets[i]!=NULL)
 		{
 			{
-				if (getBulletPositionX(&game->bullets[i]) < -20 || getBulletPositionX(&game->bullets[i]) > 700)
+				if (getBulletPositionX(game->bullets[i]) < -20 || getBulletPositionX(game->bullets[i]) > 700)
 				{
-					destroyBullet(&game->bullets[i], i);
+					destroyBullet(game->bullets[i],i);
+					game->bullets[i] = NULL;
 				}
-				else if (getBulletPositionY(&game->bullets[i]) < -20 || getBulletPositionY(&game->bullets[i]) > 700)
+				else if (getBulletPositionY(game->bullets[i]) < -20 || getBulletPositionY(game->bullets[i]) > 700)
 				{
-					destroyBullet(&game->bullets[i], i);
+					destroyBullet(game->bullets[i],i);
+					game->bullets[i] = NULL;
 				}
 			}
 		}
 	}
-	/*for (int i = 0; i < MAX_BULLETS; i++) 
-	{
-		int mw = 10, mh = 10;
-		int mx = getBulletPositionX(&game->bullets[i]), my = getBulletPositionY(&game->bullets[i]);
-		int bx = game->ledges[i].x, by = game->ledges[i].y, bw = game->ledges[i].w, bh = game->ledges[i].h;
-
-
-		if (my + mh > by &&  my < by + bh)
-		{
-			//rubbing against right edge
-			if (mx < bx + bw  &&  mx + mw > bx + bw)
-			{
-				//correct x
-				destroyBullet(&game->bullets[i], i);
-			}
-			//rubbing against left edge
-			else if (mx + mw > bx && mx < bx)
-			{
-				//correct x
-				destroyBullet(&game->bullets[i], i);
-			}
-		}
-
-		if (mx + mh > bx && mx < bx + bw)
-		{
-			//are we bumping our head
-			if (my < by + bh && my > by)
-			{
-				//correct y
-				destroyBullet(&game->bullets[i], i);
-
-			}
-			//are we landing on the ledge
-			else if (my + mh > by && my < by)
-			{
-				//correct y
-				destroyBullet(&game->bullets[i], i);
-			}
-		}
-	}*/
-
 
 	//Check for collision with any ledges (brick blocks)
 	for (int i = 0; i < 100; i++)
@@ -371,7 +333,6 @@ int processEvents(SDL_Window *window, GameState *game)
 			done = 1;
 			break;
 		}
-		printf("%0.1f\n", getTankAngle(game->t1));
 	}
 
 	const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -393,10 +354,10 @@ int processEvents(SDL_Window *window, GameState *game)
 	}
 	if (state[SDL_SCANCODE_SPACE])
 	{
+		int found = -1;
 		currentTime = SDL_GetTicks();
-		if (currentTime > getTimer(game->t1) + 500)
+		if (currentTime > getTimer(game->t1) + 300)
 		{
-			int found = -1;
 			for (int i = 0; i < MAX_BULLETS; i++)
 			{
 				if (game->bullets[i] == NULL);
@@ -407,7 +368,7 @@ int processEvents(SDL_Window *window, GameState *game)
 			}
 			if (found >= 0)
 			{
-				game->bullets[found] = createBullet(getTankPositionX(game->t1), getTankPositionY(game->t1), sin(getTankRadian(game->t1)), cos(getTankRadian(game->t1)), getTankAngle(game->t1));
+				game->bullets[found] = createBullet(getTankPositionX(game->t1), getTankPositionY(game->t1), sin(getTankRadian(game->t1)), cos(getTankRadian(game->t1)), getTankAngle(game->t1),found);
 				setTimer(game->t1, currentTime);
 			}
 		}
@@ -423,14 +384,6 @@ int processEvents(SDL_Window *window, GameState *game)
 	else
 	{
 		setTankVelocity(game->t1, 0);
-	}
-
-	for (int i = 0; i < MAX_BULLETS; i++)
-	{
-		if (game->bullets[i] != NULL)
-		{
-			printf("%0.1f		%0.1f\n", getBulletPositionX(&game->bullets[i]), getBulletPositionY(&game->bullets[i]));
-		}
 	}
 
 	return done;
@@ -473,10 +426,14 @@ void doRender(SDL_Renderer *renderer, GameState *game)
 		SDL_RenderCopy(renderer, game->brickLong, NULL, &ledgeRect);
 	}
 
-	for (int i = 0; i < MAX_BULLETS; i++) if (game->bullets[i])
+	for (int i = 0; i < MAX_BULLETS; i++)
 	{
-		SDL_Rect bullrect = { getBulletPositionX(game->bullets[i]) + 20, getBulletPositionY(game->bullets[i]) + 24, 10, 10 };
-		SDL_RenderCopyEx(renderer, game->bulletGreen, NULL, &bullrect, getBulletAngle(game->bullets[i]) + 90, NULL, SDL_FLIP_VERTICAL);
+		if (game->bullets[i]!=NULL)
+		{
+			printf("%.1f\n,		[%.1f, %.1f, nr:%d]\n", getBulletAngle(game->bullets[i]), getBulletPositionX(game->bullets[i]), getBulletPositionY(game->bullets[i]), i); 
+			SDL_Rect bullrect = { getBulletPositionX(game->bullets[i]) + 20, getBulletPositionY(game->bullets[i]) + 24, 10, 10 };
+			SDL_RenderCopyEx(renderer, game->bulletGreen, NULL, &bullrect, getBulletAngle(game->bullets[i]) + 90, NULL, SDL_FLIP_VERTICAL);
+		}
 	}
 
 	SDL_Rect rect = { getTankPositionX(game->t1), getTankPositionY(game->t1),48,48 };
