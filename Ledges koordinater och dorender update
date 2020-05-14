@@ -142,3 +142,22 @@
   
   1. Define max_ledges 50
   ev. tabort load image för fence long och side allt som har med brick bilderna att göra 
+  
+  
+  //Ser till så att man håller sig innanför fönstret
+	if (getTankPositionX(game->t1) <= 0)
+	{
+		setTankX(game->t1, 0);
+	}
+	if (getTankPositionY(game->t1) <= 0)
+	{
+		setTankY(game->t1, 0);
+	}
+	if (getTankPositionX(game->t1) >= WIDTH - 48)
+	{
+		setTankX(game->t1, WIDTH - 48);
+	}
+	if (getTankPositionY(game->t1) >= HEIGHT - 48)
+	{
+		setTankY(game->t1, HEIGHT - 48);
+	}
