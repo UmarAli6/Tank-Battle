@@ -1,7 +1,9 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_net.h>
+#include "SDL2/SDL_ttf.h"
 #include <time.h>
 #include "tank.h"
 #include "bullet.h"
@@ -35,19 +37,28 @@ typedef struct
     
     //Images
     SDL_Texture *bild;
+    SDL_Texture *bild2;
+    SDL_Texture *bild3;
+    SDL_Texture *bild4;
     SDL_Texture *brickSide;
     SDL_Texture *brickLong;
     SDL_Texture *bulletGreen;
+    SDL_Texture *label[3];
+    SDL_Texture *waitFlag;
+    
+    //Fonts
+    TTF_Font *font;
     
     //Renderer
     SDL_Renderer *renderer;
 } GameState;
 
-void loadGame(GameState *game, int *pnrOfConnections);
+int loadGame(GameState *game, int *pnrOfConnections, int *pwhich);
 void collisionDetect(GameState *game);
-int processEvents(SDL_Window *window, GameState *game);
-void doRender(SDL_Renderer *renderer, GameState *game, int *pnrOfConnections);
+int processEvents(SDL_Window *window, GameState *game, int *pnrOfConnections);
+void doRender(SDL_Renderer *renderer, GameState *game, int *pnrOfConnections, int *pwhich);
 void updateLogic(GameState *game);
+int showMenu(GameState *game);
 
 UDPsocket sd;
 IPaddress srvadd;
@@ -55,12 +66,15 @@ UDPpacket *p;
 UDPpacket *p2 = NULL;
 UDPpacket *pConnections = NULL;
 
+SDL_Surface* surface;
+TTF_Font* font;
+
 
 int main(int argc, char *argv[])
 {
-    char server[20];
-    int port;
+   
     int nrOfConnections = 0;
+    int which = 0;
     
     if (SDLNet_Init() < 0)
     {
@@ -68,27 +82,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     
-    if (!(sd = SDLNet_UDP_Open(0)))
-    {
-        fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-        exit(EXIT_FAILURE);
-    }
-    
-    /* Resolve server name  */
-    printf("Enter server: ");
-    scanf("%s",server);
-    printf("Enter port: ");
-    scanf("%d", &port);
-    
-    if (SDLNet_ResolveHost(&srvadd, server, port) == -1)
-    {
-        fprintf(stderr, "SDLNet_ResolveHost(192.0.0.1 2000): %s\n", SDLNet_GetError());
-        exit(EXIT_FAILURE);
-    }
-    
-    if (!((p = SDLNet_AllocPacket(512)) && (p2 = SDLNet_AllocPacket(512))))
-    {
-        fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
+    if (TTF_Init() < 0) {
+        fprintf(stderr, "TTF_Init: %s\n", SDLNet_GetError());
         exit(EXIT_FAILURE);
     }
     
@@ -106,19 +101,47 @@ int main(int argc, char *argv[])
                               HEIGTH,                               // height, in pixels
                               0                                  // flags
                               );
+    
+    
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     gameState.renderer = renderer;
-    
-    loadGame(&gameState, &nrOfConnections);
-    
-    // The window is open: enter program loop (see SDL_PollEvent)
-    int done = 0;
+
+    bool done = false;
+    int test = showMenu(&gameState);
+    if (test!=0) {
+        done=true;
+    }
+    else
+    {
+            if (!(sd = SDLNet_UDP_Open(0)))
+            {
+                fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
+                exit(EXIT_FAILURE);
+            }
+            
+            /* Resolve server name  */
+            
+            if (SDLNet_ResolveHost(&srvadd, "127.0.0.1", 2000) == -1)
+            {
+                fprintf(stderr, "SDLNet_ResolveHost(192.0.0.1 2000): %s\n", SDLNet_GetError());
+                exit(EXIT_FAILURE);
+            }
+            
+            if (!((p = SDLNet_AllocPacket(512)) && (p2 = SDLNet_AllocPacket(512))))
+            {
+                fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
+                exit(EXIT_FAILURE);
+            }
+            
+            done = loadGame(&gameState, &nrOfConnections, &which);
+        
+    }
     
     //Event loop
     while (!done)
     {
         //Check for events
-        done = processEvents(window, &gameState);
+        done = processEvents(window, &gameState, &nrOfConnections);
         
         // update entity members
         updateLogic(&gameState);
@@ -126,7 +149,7 @@ int main(int argc, char *argv[])
         collisionDetect(&gameState);
         
         //Render display
-        doRender(renderer, &gameState, &nrOfConnections);
+        doRender(renderer, &gameState, &nrOfConnections, &which);
         
     }
     
@@ -134,39 +157,188 @@ int main(int argc, char *argv[])
     {
         if (gameState.bullets[i] != NULL)
         {
-            destroyBullet(&gameState.bullets[i], i);
+            destroyBullet(gameState.bullets[i], i);
+            gameState.bullets[i] = NULL;
         }
     }
     
     destroyTank(gameState.t1);
+    destroyTank(gameState.t2);
+    destroyTank(gameState.t3);
+    destroyTank(gameState.t4);
     //Shutdown game and unload all memory
     SDL_DestroyTexture(gameState.bild);
+    SDL_DestroyTexture(gameState.bild2);
+    SDL_DestroyTexture(gameState.bild3);
+    SDL_DestroyTexture(gameState.bild4);
     
     // Close and destroy the window
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     
+    TTF_Quit();
     // Clean up
     SDL_Quit();
     return 0;
 }
 
-void loadGame(GameState *game, int *pnrOfConnections)
+void shutDown(GameState* game)
 {
-    int finish=0;
-    int gotPacket;
-    SDL_Surface *surface = NULL;
-    //Load images and create rendering textures from them
-    surface = IMG_Load("tank_sand.png");
-    if (surface == NULL)
-    {
-        printf("Could not find tank.png!\n");
+    
+}
+
+int showMenu(GameState *game)
+{
+    game->font = TTF_OpenFont("/Library/fonts/chalkduster.ttf", 30);
+    if (!game->font) {
+        printf("Couldnt load font!!\n");
         SDL_Quit();
         exit(1);
     }
     
-    game->bild = SDL_CreateTextureFromSurface(game->renderer, surface);
-    SDL_FreeSurface(surface);
+    SDL_Color textColor[2] = {{255,255,255},{255,0,0}};
+    const int nrOptions = 3;
+    int x, y;
+    SDL_Surface *tmp[nrOptions];
+    tmp[0]= TTF_RenderText_Blended(game->font, "Start game", textColor[0]);
+    game->label[0] = SDL_CreateTextureFromSurface(game->renderer, tmp[0]);
+    
+    tmp[1] = TTF_RenderText_Blended(game->font, "How to play", textColor[0]);
+    game->label[1] = SDL_CreateTextureFromSurface(game->renderer, tmp[1]);
+    
+    tmp[2] = TTF_RenderText_Blended(game->font, "Exit", textColor[0]);
+    game->label[2] = SDL_CreateTextureFromSurface(game->renderer, tmp[2]);
+    
+    
+    SDL_Rect textRect[nrOptions];
+    SDL_Rect howTo;
+    textRect[0].x= 320-tmp[0]->w/2;
+    textRect[0].y= 175;
+    textRect[0].w= tmp[0]->w;
+    textRect[0].h= tmp[0]->h;
+    
+    textRect[1].x= 320-tmp[1]->w/2;
+    textRect[1].y= 195+tmp[0]->h;
+    textRect[1].w= tmp[1]->w;
+    textRect[1].h= tmp[1]->h;
+    
+    textRect[2].x= 320-tmp[2]->w/2;
+    textRect[2].y= 215+tmp[0]->h+tmp[1]->h;
+    textRect[2].w= tmp[2]->w;
+    textRect[2].h= tmp[2]->h;
+    
+    SDL_Event event;
+    while (1) {
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_QUIT:
+                    for(int i = 0; i< nrOptions; i++)
+                    {
+                        SDL_FreeSurface(tmp[i]);
+                        SDL_DestroyTexture(game->label[i]);
+                    }
+                    return 1;
+                    break;
+                case SDL_MOUSEMOTION:
+                    x = event.motion.x;
+                    y = event.motion.y;
+                    for(int i = 0; i < nrOptions; i++) {
+                        if(x>=textRect[i].x && x<=textRect[i].x+textRect[i].w && y>=textRect[i].y && y<=textRect[i].y+textRect[i].h)
+                        {
+                            SDL_SetTextureColorMod(game->label[i], 250, 0, 0 );
+                        }
+                        else
+                        {
+                            SDL_SetTextureColorMod(game->label[i], 255, 255, 255 );
+                        }
+                    }
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                    x = event.button.x;
+                    y = event.button.y;
+                    for(int i = 0; i < nrOptions; i++) {
+                        if(x>=textRect[i].x && x<=textRect[i].x+textRect[i].w && y>=textRect[i].y && y<=textRect[i].y+textRect[i].h)
+                        {
+                            if (x>=textRect[1].x && x<=textRect[1].x+textRect[1].w && y>=textRect[1].y && y<=textRect[1].y+textRect[1].h) {
+                                
+                                SDL_Surface *test;
+                                test = IMG_Load("tutorial.png");
+                                SDL_Texture *Tex = SDL_CreateTextureFromSurface(game->renderer, test);
+                                int quit=0;
+                                while (!quit) {
+                                    while (SDL_PollEvent(&event)) {
+                                        switch (event.type) {
+                                            case SDL_QUIT:
+                                                for(int i = 0; i< nrOptions; i++)
+                                                {
+                                                    SDL_FreeSurface(tmp[i]);
+                                                    SDL_DestroyTexture(game->label[i]);
+                                                }
+                                                return 1;
+                                                
+                                            case SDL_MOUSEBUTTONDOWN:
+                                                SDL_FreeSurface(test);
+                                                SDL_DestroyTexture(Tex);
+                                                quit=1;
+                                                break;
+                                                
+                                            default:
+                                                break;
+                                        }
+                                    }
+                                    howTo.x= 0;
+                                    howTo.y= 0;
+                                    howTo.w= 640;
+                                    howTo.h= 480;
+                                    
+                                    SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, 255);
+                                    SDL_RenderClear(game->renderer);
+                                    SDL_RenderCopy(game->renderer, Tex, NULL, &howTo);
+                                    SDL_RenderPresent(game->renderer);
+                                }
+                            }
+                            else{
+                                for(int i = 0; i< nrOptions; i++)
+                                {
+                                    SDL_FreeSurface(tmp[i]);
+                                    SDL_DestroyTexture(game->label[i]);
+                                }
+                                int test = i;
+                                return i;
+                            }
+                            
+                        }
+                    }
+                    break;
+                
+                default:
+                    break;
+            }
+            
+        }
+        SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, 255);
+        SDL_RenderClear(game->renderer);
+        
+        for (int i = 0; i<nrOptions; i++) {
+            SDL_RenderCopy(game->renderer, game->label[i], NULL, &textRect[i]);
+        }
+        
+        SDL_RenderPresent(game->renderer);
+    }
+    
+
+    return 0;
+    
+}
+
+
+int loadGame(GameState *game, int *pnrOfConnections, int *pwhich)
+{
+    
+    int finish = 0;
+    int gotPacket;
+    SDL_Surface *surface = NULL;
+    //Load images and create rendering textures from them
     
     surface = IMG_Load("fenceRed.png");
     game->brickSide = SDL_CreateTextureFromSurface(game->renderer, surface);
@@ -180,7 +352,7 @@ void loadGame(GameState *game, int *pnrOfConnections)
     game->bulletGreen = SDL_CreateTextureFromSurface(game->renderer, surface);
     SDL_FreeSurface(surface);
     
-    char client[50]="Client";
+    char client[50] = "Client";
     //SEND SOMETHING TO SERVER FOR CONNECTION
     sprintf((char *)p->data, "%s\n", client);
     p->address.host = srvadd.host;    /* Set the destination host */
@@ -189,62 +361,173 @@ void loadGame(GameState *game, int *pnrOfConnections)
     SDLNet_UDP_Send(sd, -1, p);
     
     while (!finish) {
-        
-        gotPacket=SDLNet_UDP_Recv(sd, p2);
+        gotPacket = SDLNet_UDP_Recv(sd, p2);
         if (gotPacket) {
-            sscanf((char *)p2->data,"%d\n", pnrOfConnections);
-            printf("NEW CONNECTION! THERE IS %d ACTIVE CONNECTIONS\n", *pnrOfConnections);
-            if (*pnrOfConnections==1) {
+            sscanf((char *)p2->data, "%d\n", pnrOfConnections);
+            
+            if (*pnrOfConnections == 1)
+            {
+                printf("NEW CONNECTION! THERE IS %d ACTIVE CONNECTIONS\n", *pnrOfConnections);
+                surface = IMG_Load("tank_sand.png");
+                if (surface == NULL)
+                {
+                    printf("Could not find tank.png!\n");
+                    SDL_Quit();
+                    exit(1);
+                }
                 
-                game->t1 = createTank(0,0);
+                game->bild = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_green.png");
+                game->bild2 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_dark.png");
+                game->bild3 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_blue.png");
+                game->bild4 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                game->t1 = createTank(0, 0); //TANK SAND
                 setTankAngle(game->t1, -90);
-                game->t2 = createTank(0,432);
+                game->t2 = createTank(0, 432); //TANK DARK
                 setTankAngle(game->t2, 90);
-                game->t3 = createTank(592,0);
+                game->t3 = createTank(592, 0); //TANK GREEN
                 setTankAngle(game->t3, -90);
-                game->t4 = createTank(592,432);
+                game->t4 = createTank(592, 432); //TANK BLUE
                 setTankAngle(game->t4, 90);
-                finish=1;
-            }
-            if (*pnrOfConnections==2) {
+                finish = 1;
+                *pwhich = 1;
                 
-                game->t2 = createTank(0,0);
+            }
+            if (*pnrOfConnections == 2)
+            {
+                printf("NEW CONNECTION! THERE IS %d ACTIVE CONNECTIONS\n", *pnrOfConnections);
+                surface = IMG_Load("tank_sand.png");
+                if (surface == NULL)
+                {
+                    printf("Could not find tank.png!\n");
+                    SDL_Quit();
+                    exit(1);
+                }
+                
+                game->bild = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_green.png");
+                game->bild2 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_dark.png");
+                game->bild3 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_blue.png");
+                game->bild4 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                
+                game->t2 = createTank(0, 0); //TANK SAND
                 setTankAngle(game->t2, -90);
-                game->t1 = createTank(592,0);
+                game->t1 = createTank(592, 0); //TANK GREEN
                 setTankAngle(game->t1, -90);
-                game->t3 = createTank(592,432);
+                game->t3 = createTank(592, 432); //TANK BLUE
                 setTankAngle(game->t3, 90);
-                game->t4 = createTank(0,432);
+                game->t4 = createTank(0, 432); //TANK DARK
                 setTankAngle(game->t4, 90);
-                finish=1;
+                finish = 1;
+                *pwhich = 2;
                 
             }
-            if (*pnrOfConnections==3) {
+            if (*pnrOfConnections == 3)
+            {
+                printf("NEW CONNECTION! THERE IS %d ACTIVE CONNECTIONS\n", *pnrOfConnections);
+                surface = IMG_Load("tank_sand.png");
+                if (surface == NULL)
+                {
+                    printf("Could not find tank.png!\n");
+                    SDL_Quit();
+                    exit(1);
+                }
                 
-                game->t2 = createTank(592,432);
-                setTankAngle(game->t2, -90);
-                game->t3 = createTank(592,0);
+                game->bild = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_green.png");
+                game->bild2 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_dark.png");
+                game->bild3 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_blue.png");
+                game->bild4 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                game->t2 = createTank(592, 432); //TANK BLUE
+                setTankAngle(game->t2, 90);
+                game->t3 = createTank(0, 0); //TANK SAND
                 setTankAngle(game->t3, -90);
-                game->t1 = createTank(0,432);
+                game->t1 = createTank(0, 432); //TANK DARK
                 setTankAngle(game->t1, 90);
-                game->t4 = createTank(0,0);
-                setTankAngle(game->t4, 90);
-                finish=1;
+                game->t4 = createTank(592, 0); //TANK GREEN
+                setTankAngle(game->t4, -90);
+                finish = 1;
+                *pwhich = 3;
+               
             }
-            if (*pnrOfConnections==4) {
+            if (*pnrOfConnections == 4)
+            {
+                printf("NEW CONNECTION! THERE IS %d ACTIVE CONNECTIONS\n", *pnrOfConnections);
+                surface = IMG_Load("tank_sand.png");
+                if (surface == NULL)
+                {
+                    printf("Could not find tank.png!\n");
+                    SDL_Quit();
+                    exit(1);
+                }
                 
-                game->t2 = createTank(0,0);
+                game->bild = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_green.png");
+                game->bild2 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_dark.png");
+                game->bild3 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                surface = IMG_Load("tank_blue.png");
+                game->bild4 = SDL_CreateTextureFromSurface(game->renderer, surface);
+                SDL_FreeSurface(surface);
+                
+                game->t2 = createTank(592, 0); //TANK GREEN
                 setTankAngle(game->t2, -90);
-                game->t3 = createTank(592,0);
-                setTankAngle(game->t3, -90);
-                game->t4 = createTank(0,432);
-                setTankAngle(game->t4, 90);
-                game->t1 = createTank(592,432);
+                game->t3 = createTank(0, 432); //TANK DARK
+                setTankAngle(game->t3, 90);
+                game->t4 = createTank(0, 0); //TANK SAND
+                setTankAngle(game->t4, -90);
+                game->t1 = createTank(592, 432); //TANK BLUE
                 setTankAngle(game->t1, 90);
-                finish=1;
+                finish = 1;
+                *pwhich = 4;
+                
+            }
+            
+            
+            if (*pnrOfConnections == 5)
+            {
+                printf("Server is Full! Please try again later!\n");
+                return 1;
             }
             
         }
+        
     }
     
     
@@ -324,6 +607,8 @@ void loadGame(GameState *game, int *pnrOfConnections)
      game->ledges[7].x = 160;
      game->ledges[7].y = 90;
      */
+    
+    return 0;
 }
 
 void collisionDetect(GameState *game)
@@ -349,16 +634,18 @@ void collisionDetect(GameState *game)
     //Bullets within window
     for (int i = 0; i < MAX_BULLETS; i++)
     {
-        if (game->bullets[i]!=NULL)
+        if (game->bullets[i] != NULL)
         {
             {
                 if (getBulletPositionX(game->bullets[i]) < -20 || getBulletPositionX(game->bullets[i]) > 700)
                 {
-                    destroyBullet(&game->bullets[i], i);
+                    destroyBullet(game->bullets[i], i);
+                    game->bullets[i] = NULL;
                 }
                 else if (getBulletPositionY(game->bullets[i]) < -20 || getBulletPositionY(game->bullets[i]) > 700)
                 {
-                    destroyBullet(&game->bullets[i], i);
+                    destroyBullet(game->bullets[i], i);
+                    game->bullets[i] = NULL;
                 }
             }
         }
@@ -409,7 +696,7 @@ void collisionDetect(GameState *game)
     
 }
 
-int processEvents(SDL_Window *window, GameState *game)
+int processEvents(SDL_Window *window, GameState *game, int *pnrOfConnections)
 {
     SDL_Event event;
     int done = 0;
@@ -447,66 +734,68 @@ int processEvents(SDL_Window *window, GameState *game)
         
         
     }
-    
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
-    if (state[SDL_SCANCODE_LEFT])
-    {
-        setTankAngleOLD(game->t1, getTankAngle(game->t1));
-        updateTankAngle(game->t1, -3);
-        if (getTankAngle(game->t1) < 0)
+    if (*pnrOfConnections>3) {
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+        if (state[SDL_SCANCODE_LEFT])
         {
-            setTankAngle(game->t1, 360);
-        }
-    }
-    if (state[SDL_SCANCODE_RIGHT])
-    {
-        setTankAngleOLD(game->t1, getTankAngle(game->t1));
-        updateTankAngle(game->t1, 3);
-        if (getTankAngle(game->t1) > 359)
-        {
-            setTankAngle(game->t1, 0);
-        }
-    }
-    if (state[SDL_SCANCODE_SPACE])
-    {
-        currentTime = SDL_GetTicks();
-        if (currentTime > getTimer(game->t1) + 500)
-        {
-            int found = -1;
-            for (int i = 0; i < MAX_BULLETS; i++)
+            setTankAngleOLD(game->t1, getTankAngle(game->t1));
+            updateTankAngle(game->t1, -3);
+            if (getTankAngle(game->t1) < 0)
             {
-                if (game->bullets[i] == NULL)
+                setTankAngle(game->t1, 360);
+            }
+        }
+        if (state[SDL_SCANCODE_RIGHT])
+        {
+            setTankAngleOLD(game->t1, getTankAngle(game->t1));
+            updateTankAngle(game->t1, 3);
+            if (getTankAngle(game->t1) > 359)
+            {
+                setTankAngle(game->t1, 0);
+            }
+        }
+        if (state[SDL_SCANCODE_SPACE])
+        {
+            currentTime = SDL_GetTicks();
+            if (currentTime > getTimer(game->t1) + 500)
+            {
+                int found = -1;
+                for (int i = 0; i < MAX_BULLETS; i++)
                 {
-                    found = i;
-                    break;
+                    if (game->bullets[i] == NULL)
+                    {
+                        found = i;
+                        break;
+                    }
+                }
+                if (found >= 0)
+                {
+                    game->bullets[found] = createBullet(getTankPositionX(game->t1), getTankPositionY(game->t1), sin(getTankRadian(game->t1)), cos(getTankRadian(game->t1)), getTankAngle(game->t1), found);
+                    setTimer(game->t1, currentTime);
                 }
             }
-            if (found >= 0)
+        }
+        if (state[SDL_SCANCODE_UP])
+        {
+            setTankVelocity(game->t1, -3);
+        }
+        else if (state[SDL_SCANCODE_DOWN])
+        {
+            setTankVelocity(game->t1, 3);
+        }
+        else
+        {
+            setTankVelocity(game->t1, 0);
+        }
+        
+        for (int i = 0; i < MAX_BULLETS; i++)
+        {
+            if (game->bullets[i] != NULL)
             {
-                game->bullets[found] =createBullet(getTankPositionX(game->t1), getTankPositionY(game->t1), sin(getTankRadian(game->t1)), cos(getTankRadian(game->t1)), getTankAngle(game->t1));
-                setTimer(game->t1, currentTime);
+                printf("%0.1f        %0.1f        nr:%d\n", getBulletPositionX(game->bullets[i]), getBulletPositionY(game->bullets[i]),i);
             }
         }
-    }
-    if (state[SDL_SCANCODE_UP])
-    {
-        setTankVelocity(game->t1, -3);
-    }
-    else if (state[SDL_SCANCODE_DOWN])
-    {
-        setTankVelocity(game->t1, 3);
-    }
-    else
-    {
-        setTankVelocity(game->t1, 0);
-    }
-    
-    for (int i = 0; i < MAX_BULLETS; i++)
-    {
-        if (game->bullets[i] != NULL)
-        {
-            printf("%0.1f        %0.1f\n", getBulletPositionX(game->bullets[i]), getBulletPositionY(game->bullets[i]));
-        }
+        
     }
     
     return done;
@@ -518,16 +807,16 @@ void updateLogic(GameState *game)
     setTankRadian(game->t1, getTankAngle(game->t1) * (M_PI / 180.0));
     setTankDx(game->t1, cos(getTankRadian(game->t1)) * getTankVelocity(game->t1));
     setTankDy(game->t1, sin(getTankRadian(game->t1)) * getTankVelocity(game->t1));
-    xOLD=getTankPositionX(game->t1);
-    yOLD=getTankPositionY(game->t1);
-    angleOLD=getTankAngleOLD(game->t1);
+    xOLD = getTankPositionX(game->t1);
+    yOLD = getTankPositionY(game->t1);
+    angleOLD = getTankAngleOLD(game->t1);
     
     updateTankPositionX(game->t1, getTankDx(game->t1));
     updateTankPositionY(game->t1, getTankDy(game->t1));
     setTankAngleOLD(game->t1, getTankAngle(game->t1));
     
-    xNEW=getTankPositionX(game->t1);
-    yNEW=getTankPositionY(game->t1);
+    xNEW = getTankPositionX(game->t1);
+    yNEW = getTankPositionY(game->t1);
     angleNEW = getTankAngle(game->t1);
     
     
@@ -536,8 +825,6 @@ void updateLogic(GameState *game)
         updateBulletPositionX(game->bullets[i], getBulletDx(game->bullets[i]));
         updateBulletPositionY(game->bullets[i], getBulletDy(game->bullets[i]));
     }
-    
-    // printf("OLD: %0.1f\n", getTankAngleOLD(game->t1));
     
     if (xOLD != xNEW || yOLD != yNEW || angleOLD != angleNEW) {
         
@@ -550,24 +837,24 @@ void updateLogic(GameState *game)
     
 }
 
-void doRender(SDL_Renderer *renderer, GameState *game, int *pnrOfConnections)
+void doRender(SDL_Renderer *renderer, GameState *game, int *pnrOfConnections, int *pwhich)
 {
     float xCORD, yCORD, dAngle;
     int c;
     if (SDLNet_UDP_Recv(sd, p2)) {
         sscanf((char *)p2->data, "%f %f %d %f %d\n", &xCORD, &yCORD, &c, &dAngle, pnrOfConnections);
-        if (c==1) {
+        if (c == 1) {
             setEnemyX(game->t2, xCORD);
             setEnemyY(game->t2, yCORD);
             setEnemyAngle(game->t2, dAngle);
         }
-        if (c==2) {
+        if (c == 2) {
             
             setEnemyX(game->t3, xCORD);
             setEnemyY(game->t3, yCORD);
             setEnemyAngle(game->t3, dAngle);
         }
-        if (c==3) {
+        if (c == 3) {
             
             setEnemyX(game->t4, xCORD);
             setEnemyY(game->t4, yCORD);
@@ -601,15 +888,62 @@ void doRender(SDL_Renderer *renderer, GameState *game, int *pnrOfConnections)
         SDL_RenderCopyEx(renderer, game->bulletGreen, NULL, &bullrect, getBulletAngle(game->bullets[i]) + 90, NULL, SDL_FLIP_VERTICAL);
     }
     SDL_Rect rect = { getTankPositionX(game->t1), getTankPositionY(game->t1),48,48 };
-    SDL_Rect secondDest = {getTankPositionX(game->t2), getTankPositionY(game->t2) ,48,48 };
-    SDL_Rect thirdDest = {getTankPositionX(game->t3), getTankPositionY(game->t3) ,48,48 };
-    SDL_Rect fourthDest = {getTankPositionX(game->t4), getTankPositionY(game->t4) ,48,48 };
+    SDL_Rect secondDest = { getTankPositionX(game->t2), getTankPositionY(game->t2) ,48,48 };
+    SDL_Rect thirdDest = { getTankPositionX(game->t3), getTankPositionY(game->t3) ,48,48 };
+    SDL_Rect fourthDest = { getTankPositionX(game->t4), getTankPositionY(game->t4) ,48,48 };
     
-    SDL_RenderCopyEx(renderer, game->bild, NULL, &rect, getTankAngle(game->t1)+90, NULL, 0);
-    SDL_RenderCopyEx(renderer, game->bild, NULL, &secondDest, getTankAngle(game->t2)+90, NULL, 0);
-    SDL_RenderCopyEx(renderer, game->bild, NULL, &thirdDest, getTankAngle(game->t3)+90, NULL, 0);
-    SDL_RenderCopyEx(renderer, game->bild, NULL, &fourthDest, getTankAngle(game->t4)+90, NULL, 0);
-
+    if (*pwhich==1) {
+        SDL_RenderCopyEx(renderer, game->bild, NULL, &rect, getTankAngle(game->t1) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild3, NULL, &secondDest, getTankAngle(game->t2) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild2, NULL, &thirdDest, getTankAngle(game->t3) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild4, NULL, &fourthDest, getTankAngle(game->t4) + 90, NULL, 0);
+    }
+    if (*pwhich==2) {
+        
+        SDL_RenderCopyEx(renderer, game->bild2, NULL, &rect, getTankAngle(game->t1) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild, NULL, &secondDest, getTankAngle(game->t2) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild4, NULL, &thirdDest, getTankAngle(game->t3) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild3, NULL, &fourthDest, getTankAngle(game->t4) + 90, NULL, 0);
+    }
+    if (*pwhich==3) {
+        
+        SDL_RenderCopyEx(renderer, game->bild3, NULL, &rect, getTankAngle(game->t1) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild4, NULL, &secondDest, getTankAngle(game->t2) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild, NULL, &thirdDest, getTankAngle(game->t3) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild2, NULL, &fourthDest, getTankAngle(game->t4) + 90, NULL, 0);
+    }
+    if (*pwhich==4) {
+        
+        SDL_RenderCopyEx(renderer, game->bild4, NULL, &rect, getTankAngle(game->t1) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild2, NULL, &secondDest, getTankAngle(game->t2) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild3, NULL, &thirdDest, getTankAngle(game->t3) + 90, NULL, 0);
+        SDL_RenderCopyEx(renderer, game->bild, NULL, &fourthDest, getTankAngle(game->t4) + 90, NULL, 0);
+    }
+    if (*pnrOfConnections<4) {
+        
+        game->font = TTF_OpenFont("/Library/fonts/chalkduster.ttf", 15);
+        if (!game->font) {
+            printf("Couldnt load font!!\n");
+            SDL_Quit();
+            exit(1);
+        }
+        
+        SDL_Color Color = {0,0,0};
+        SDL_Surface *tmp;
+        tmp= TTF_RenderText_Blended(game->font, "Waiting for players...", Color);
+        game->waitFlag = SDL_CreateTextureFromSurface(game->renderer, tmp);
+        
+        SDL_Rect textRect = {320-tmp->w/2, 210, tmp->w, tmp->h};
+        int quit = 0;
+        
+        SDL_RenderCopy(renderer, game->waitFlag, NULL, &textRect);
+        
+        if (*pnrOfConnections ==4) {
+            SDL_FreeSurface(tmp);
+            SDL_DestroyTexture(game->waitFlag);
+            quit=1;
+        }
+    }
     
     
     
@@ -618,3 +952,5 @@ void doRender(SDL_Renderer *renderer, GameState *game, int *pnrOfConnections)
     //We are done drawing, "present" or show to the screen what we've drawn
     SDL_RenderPresent(renderer);
 }
+
+
