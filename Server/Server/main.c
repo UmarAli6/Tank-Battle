@@ -14,10 +14,12 @@ int main(int argc, char **argv)
     Uint32 IPclient2 = 0;
     Uint32 IPclient3 = 0;
     Uint32 IPclient4 = 0;
+    Uint32 IPclientFAIL = 0;
     Uint32 portClient1 = 0;
     Uint32 portClient2 = 0;
     Uint32 portClient3 = 0;
     Uint32 portClient4 = 0;
+    Uint32 portClientFAIL = 0;
     int quit, c;
     int nrOfConnections = 0;
     float a, b, d;
@@ -102,6 +104,19 @@ int main(int argc, char **argv)
                 pSent->address.host = IPclient4;
                 pSent->address.port = portClient4;
                 printf("\tNumber of clients ATM: %d\n", nrOfConnections);
+                sprintf((char *)pSent->data, "%d\n", nrOfConnections);
+                pSent->len = strlen((char *)pSent->data) + 1;
+                SDLNet_UDP_Send(sd, -1, pSent);
+            }
+            else if (pRecive->address.port != portClient1 && pRecive->address.port != portClient2 && pRecive->address.port != portClient3 && pRecive->address.port != portClient4)
+            {
+                nrOfConnections=5;
+                printf("\tClient FAIL CONNECTED\n");
+                printf("\tAddress: %x %x\n", pRecive->address.host, pRecive->address.port);
+                IPclientFAIL = pRecive->address.host;
+                portClientFAIL = pRecive->address.port;
+                pSent->address.host = IPclientFAIL;
+                pSent->address.port = portClientFAIL;
                 sprintf((char *)pSent->data, "%d\n", nrOfConnections);
                 pSent->len = strlen((char *)pSent->data) + 1;
                 SDLNet_UDP_Send(sd, -1, pSent);
@@ -290,9 +305,6 @@ int main(int argc, char **argv)
                     printf("\n");
                 }
             
-            /* Quit if packet contains "quit" */
-            if (strcmp((char *)pSent->data, "quit") == 0)
-                quit = 1;
         }
     }
     
