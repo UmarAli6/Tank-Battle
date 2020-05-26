@@ -9,6 +9,7 @@
 
 #define WIDTH 960
 #define HEIGHT 720
+#define MAX_LEDGES 50
 
 void loadGame(GameState* game, int *pnrOfConnections, UDPsocket *sd, IPaddress *srvadd, UDPpacket *p, UDPpacket *p2, int *pWhich) {
 	SDL_Surface *surface = NULL;
@@ -99,126 +100,126 @@ void loadGame(GameState* game, int *pnrOfConnections, UDPsocket *sd, IPaddress *
 		(*game).bullets[i] = NULL;
 	}
 
-	//init ledeges
-	(*game).walls[0].w = WIDTH;
-	(*game).walls[0].h = 5;
-	(*game).walls[0].x = 0;
-	(*game).walls[0].y = 0;
+	//init ledges
+	(*game).ledges[0].w = WIDTH;
+	(*game).ledges[0].h = 5;
+	(*game).ledges[0].x = 0;
+	(*game).ledges[0].y = 0;
 
-	(*game).walls[1].w = 5;
-	(*game).walls[1].h = HEIGHT;
-	(*game).walls[1].x = 0;
-	(*game).walls[1].y = 0;
+	(*game).ledges[1].w = 5;
+	(*game).ledges[1].h = HEIGHT;
+	(*game).ledges[1].x = 0;
+	(*game).ledges[1].y = 0;
 
-	(*game).walls[2].w = WIDTH;
-	(*game).walls[2].h = 5;
-	(*game).walls[2].x = 0;
-	(*game).walls[2].y = HEIGHT - 5;
+	(*game).ledges[2].w = WIDTH;
+	(*game).ledges[2].h = 5;
+	(*game).ledges[2].x = 0;
+	(*game).ledges[2].y = HEIGHT - 5;
 
-	(*game).walls[3].w = 5;
-	(*game).walls[3].h = HEIGHT;
-	(*game).walls[3].x = WIDTH - 5;
-	(*game).walls[3].y = 0;
+	(*game).ledges[3].w = 5;
+	(*game).ledges[3].h = HEIGHT;
+	(*game).ledges[3].x = WIDTH - 5;
+	(*game).ledges[3].y = 0;
 
-	(*game).walls[4].w = 5;
-	(*game).walls[4].h = 120;
-	(*game).walls[4].x = 480;
-	(*game).walls[4].y = 0;
+	(*game).ledges[4].w = 5;
+	(*game).ledges[4].h = 120;
+	(*game).ledges[4].x = 480;
+	(*game).ledges[4].y = 0;
 
-	(*game).walls[5].w = 120;
-	(*game).walls[5].h = 5;
-	(*game).walls[5].x = 480;
-	(*game).walls[5].y = 120;
+	(*game).ledges[5].w = 120;
+	(*game).ledges[5].h = 5;
+	(*game).ledges[5].x = 480;
+	(*game).ledges[5].y = 120;
 
-	(*game).walls[6].w = 240;
-	(*game).walls[6].h = 5;
-	(*game).walls[6].x = 120;
-	(*game).walls[6].y = 120;
+	(*game).ledges[6].w = 240;
+	(*game).ledges[6].h = 5;
+	(*game).ledges[6].x = 120;
+	(*game).ledges[6].y = 120;
 
-	(*game).walls[7].w = 5;
-	(*game).walls[7].h = 120;
-	(*game).walls[7].x = 360;
-	(*game).walls[7].y = 120;
+	(*game).ledges[7].w = 5;
+	(*game).ledges[7].h = 120;
+	(*game).ledges[7].x = 360;
+	(*game).ledges[7].y = 120;
 
-	(*game).walls[8].w = 5;
-	(*game).walls[8].h = 120;
-	(*game).walls[8].x = 120;
-	(*game).walls[8].y = 240;
+	(*game).ledges[8].w = 5;
+	(*game).ledges[8].h = 120;
+	(*game).ledges[8].x = 120;
+	(*game).ledges[8].y = 240;
 
-	(*game).walls[9].w = 240;
-	(*game).walls[9].h = 5;
-	(*game).walls[9].x = 120;
-	(*game).walls[9].y = 360;
+	(*game).ledges[9].w = 240;
+	(*game).ledges[9].h = 5;
+	(*game).ledges[9].x = 120;
+	(*game).ledges[9].y = 360;
 
-	(*game).walls[10].w = 5;
-	(*game).walls[10].h = 240;
-	(*game).walls[10].x = 360;
-	(*game).walls[10].y = 360;
+	(*game).ledges[10].w = 5;
+	(*game).ledges[10].h = 240;
+	(*game).ledges[10].x = 360;
+	(*game).ledges[10].y = 360;
 
-	(*game).walls[11].w = 240;
-	(*game).walls[11].h = 5;
-	(*game).walls[11].x = 0;
-	(*game).walls[11].y = 480;
+	(*game).ledges[11].w = 240;
+	(*game).ledges[11].h = 5;
+	(*game).ledges[11].x = 0;
+	(*game).ledges[11].y = 480;
 
-	(*game).walls[12].w = 5;
-	(*game).walls[12].h = 120;
-	(*game).walls[12].x = 840;
-	(*game).walls[12].y = 600;
+	(*game).ledges[12].w = 5;
+	(*game).ledges[12].h = 120;
+	(*game).ledges[12].x = 840;
+	(*game).ledges[12].y = 600;
 
-	(*game).walls[13].w = 5;
-	(*game).walls[13].h = 120;
-	(*game).walls[13].x = 600;
-	(*game).walls[13].y = 600;
+	(*game).ledges[13].w = 5;
+	(*game).ledges[13].h = 120;
+	(*game).ledges[13].x = 600;
+	(*game).ledges[13].y = 600;
 
-	(*game).walls[14].w = 120;
-	(*game).walls[14].h = 5;
-	(*game).walls[14].x = 120;
-	(*game).walls[14].y = 600;
+	(*game).ledges[14].w = 120;
+	(*game).ledges[14].h = 5;
+	(*game).ledges[14].x = 120;
+	(*game).ledges[14].y = 600;
 
-	(*game).walls[15].w = 5;
-	(*game).walls[15].h = 120;
-	(*game).walls[15].x = 480;
-	(*game).walls[15].y = 240;
+	(*game).ledges[15].w = 5;
+	(*game).ledges[15].h = 120;
+	(*game).ledges[15].x = 480;
+	(*game).ledges[15].y = 240;
 
-	(*game).walls[16].w = 120;
-	(*game).walls[16].h = 5;
-	(*game).walls[16].x = 600;
-	(*game).walls[16].y = 240;
+	(*game).ledges[16].w = 120;
+	(*game).ledges[16].h = 5;
+	(*game).ledges[16].x = 600;
+	(*game).ledges[16].y = 240;
 
-	(*game).walls[17].w = 120;
-	(*game).walls[17].h = 5;
-	(*game).walls[17].x = 720;
-	(*game).walls[17].y = 120;
+	(*game).ledges[17].w = 120;
+	(*game).ledges[17].h = 5;
+	(*game).ledges[17].x = 720;
+	(*game).ledges[17].y = 120;
 
-	(*game).walls[18].w = 5;
-	(*game).walls[18].h = 240;
-	(*game).walls[18].x = 720;
-	(*game).walls[18].y = 120;
+	(*game).ledges[18].w = 5;
+	(*game).ledges[18].h = 240;
+	(*game).ledges[18].x = 720;
+	(*game).ledges[18].y = 120;
 
-	(*game).walls[19].w = 120;
-	(*game).walls[19].h = 5;
-	(*game).walls[19].x = 840;
-	(*game).walls[19].y = 240;
+	(*game).ledges[19].w = 120;
+	(*game).ledges[19].h = 5;
+	(*game).ledges[19].x = 840;
+	(*game).ledges[19].y = 240;
 
-	(*game).walls[20].w = 120;
-	(*game).walls[20].h = 5;
-	(*game).walls[20].x = 720;
-	(*game).walls[20].y = 360;
+	(*game).ledges[20].w = 120;
+	(*game).ledges[20].h = 5;
+	(*game).ledges[20].x = 720;
+	(*game).ledges[20].y = 360;
 
-	(*game).walls[21].w = 240;
-	(*game).walls[21].h = 5;
-	(*game).walls[21].x = 480;
-	(*game).walls[21].y = 480;
+	(*game).ledges[21].w = 240;
+	(*game).ledges[21].h = 5;
+	(*game).ledges[21].x = 480;
+	(*game).ledges[21].y = 480;
 
-	(*game).walls[22].w = 5;
-	(*game).walls[22].h = 120;
-	(*game).walls[22].x = 840;
-	(*game).walls[22].y = 360;
+	(*game).ledges[22].w = 5;
+	(*game).ledges[22].h = 120;
+	(*game).ledges[22].x = 840;
+	(*game).ledges[22].y = 360;
 
-	(*game).walls[23].w = 5;
-	(*game).walls[23].h = 120;
-	(*game).walls[23].x = 720;
-	(*game).walls[23].y = 480;
+	(*game).ledges[23].w = 5;
+	(*game).ledges[23].h = 120;
+	(*game).ledges[23].x = 720;
+	(*game).ledges[23].y = 480;
 	(*game).haveUpdated = 1;
 }
 
@@ -229,7 +230,7 @@ void collisionDetect(GameState* game) {
 	int tankRight, wallRight, bulletRight;
 	int tankTop, wallTop, bulletTop;
 	int tankBottom, wallBottom, bulletBottom;
-	
+
 
 	//Calculate the sides of the tank
 	tankLeft = getTankPositionX((*game).tanks[0]);
@@ -237,15 +238,15 @@ void collisionDetect(GameState* game) {
 	tankTop = getTankPositionY((*game).tanks[0]);
 	tankBottom = getTankPositionY((*game).tanks[0]) + 48;
 
-	//Check for collision with any walls and frame
-	for (int i = 0; i < MAX_WALLS; i++)
+	//Check for collision with any ledges and frame
+	for (int i = 0; i < MAX_LEDGES; i++)
 	{
 
 		//Calculate the sides of the wall
-		wallLeft = game->walls[i].x;
-		wallRight = game->walls[i].x + game->walls[i].w;
-		wallTop = game->walls[i].y;
-		wallBottom = game->walls[i].y + game->walls[i].h;
+		wallLeft = game->ledges[i].x;
+		wallRight = game->ledges[i].x + game->ledges[i].w;
+		wallTop = game->ledges[i].y;
+		wallBottom = game->ledges[i].y + game->ledges[i].h;
 
 		//If all side of the tank is outside of the wall, if not -> collision
 		if (tankBottom >= wallTop && tankTop <= wallBottom && tankRight >= wallLeft && tankLeft <= wallRight)
@@ -272,7 +273,7 @@ void collisionDetect(GameState* game) {
 			int nxtTankTop = getTankPositionY((*game).tanks[j]);
 			int nxtTankBottom = getTankPositionY((*game).tanks[j]) + 48;
 
-			if ((tankBottom >= nxtTankTop && tankTop <= nxtTankBottom && tankRight >= nxtTankLeft && tankLeft <= nxtTankRight) && (j!=i))
+			if ((tankBottom >= nxtTankTop && tankTop <= nxtTankBottom && tankRight >= nxtTankLeft && tankLeft <= nxtTankRight) && (j != i))
 			{
 				setTankY((*game).tanks[0], (getTankPositionY((*game).tanks[0])) - getTankDy((*game).tanks[0]));
 				setTankX((*game).tanks[0], (getTankPositionX((*game).tanks[0])) - getTankDx((*game).tanks[0]));
@@ -280,13 +281,13 @@ void collisionDetect(GameState* game) {
 		}
 
 	}
-	
+
 	//Tar bort skott som träffar och dödar andra spelare eller åker utanför banan/träffar väggar
 	int bDestroyed;
 	for (int i = 0; i < MAX_BULLETS; i++)
 	{
 		bDestroyed = 0;
-		if ((*game).bullets[i] != NULL){
+		if ((*game).bullets[i] != NULL) {
 
 			//Calculate the sides of the bullet
 			bulletLeft = getBulletPositionX((*game).bullets[i]);
@@ -314,13 +315,13 @@ void collisionDetect(GameState* game) {
 			//Tar bort skott som träffar väggar eller åker utanför banan
 			if (!bDestroyed && (*game).bullets[i] != NULL) {
 
-				for (int j = 0; j < MAX_WALLS && bDestroyed == 0; j++) {
+				for (int j = 0; j < MAX_LEDGES && bDestroyed == 0; j++) {
 
 					//Calculate the sides of the wall
-					wallLeft = game->walls[j].x;
-					wallRight = game->walls[j].x + game->walls[j].w;
-					wallTop = game->walls[j].y;
-					wallBottom = game->walls[j].y + game->walls[j].h;
+					wallLeft = game->ledges[j].x;
+					wallRight = game->ledges[j].x + game->ledges[j].w;
+					wallTop = game->ledges[j].y;
+					wallBottom = game->ledges[j].y + game->ledges[j].h;
 
 					//If all side of the bullet is outside of the wall, if not -> collision
 					if (bulletBottom >= wallTop && bulletTop <= wallBottom && bulletRight >= wallLeft && bulletLeft <= wallRight)
@@ -429,7 +430,7 @@ int processEvents(SDL_Window *window, GameState *game, UDPsocket *sd, IPaddress 
 		if (currentTime > getTimer((*game).tanks[0]) + 500)
 		{
 			if (getAmmo((*game).tanks[0], &returnedNumber)) {
-				//Här för att skicka så den vet att ett skott har skjuttit 555 för skott just nu
+				//Här för att skicka så den vet att ett skott har skjutit 555 för skott just nu
 				float xNEW = 5.0f, yNEW = 5.0f, angleNEW = 5.0f;
 				sprintf((char *)p->data, "%f %f %f\n", xNEW, yNEW, angleNEW);
 				p->address.host = (*srvadd).host;    /* Set the destination host */
@@ -524,9 +525,9 @@ void doRender(SDL_Renderer *renderer, GameState *game, int *pnrOfConnections, UD
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 
 	//Ritar väggarna i spelbanan
-	for (int i = 0; i<MAX_WALLS; i++)
+	for (int i = 0; i<MAX_LEDGES; i++)
 	{
-		SDL_Rect ledgeRect = { game->walls[i].x,game->walls[i].y,game->walls[i].w,game->walls[i].h };
+		SDL_Rect ledgeRect = { game->ledges[i].x,game->ledges[i].y,game->ledges[i].w,game->ledges[i].h };
 		SDL_RenderFillRect(renderer, &ledgeRect);
 
 	}
