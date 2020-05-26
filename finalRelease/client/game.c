@@ -4,8 +4,8 @@
 #include <string.h>
 #include <SDL_ttf.h>
 #include <SDL_net.h>
-#include "SDL_image.h"
-#include "SDL.h"
+#include <SDL_image.h>
+#include <SDL.h>
 
 #define WIDTH 960
 #define HEIGHT 720
