@@ -422,7 +422,7 @@ int processEvents(SDL_Window *window, GameState *game, UDPsocket *sd, IPaddress 
 			setTankAngle((*game).tanks[0], 0);
 		}
 	}
-	if (state[SDL_SCANCODE_SPACE] && getHealth((*game).tanks[0]) && *pNrOfConnections != 4) //Lever och försöker skjuta och att alla är anslutna
+	if (state[SDL_SCANCODE_SPACE] && getHealth((*game).tanks[0]) && *pNrOfConnections == 4) //Lever och försöker skjuta och att alla är anslutna
 	{
 		int returnedNumber;
 		currentTime = SDL_GetTicks();
