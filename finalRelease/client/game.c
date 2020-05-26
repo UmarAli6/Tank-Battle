@@ -1,16 +1,17 @@
 #define _CRT_SECURE_NO_WARNINGS
+#include <string.h>
+#include <SDL_ttf.h>
+#include <SDL_net.h>
+#include <SDL_image.h>
+#include <SDL.h>
+
 #include "game.h"
 #include "network.h"
-#define WINDOW_WIDTH (640)
-#define WINDOW_HEIGHT (480)
-#include <string.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_net.h>
-#include "SDL2/SDL_image.h"
-#include "SDL2/SDL.h"
 
 #define WIDTH 960
 #define HEIGHT 720
+#define WINDOW_WIDTH (640)
+#define WINDOW_HEIGHT (480)
 
 void loadGame(GameState* game, int *pnrOfConnections, UDPsocket *sd, IPaddress *srvadd, UDPpacket *p, UDPpacket *p2, int *pWhich) {
     SDL_Surface *surface = NULL;
