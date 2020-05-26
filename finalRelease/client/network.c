@@ -1,8 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <SDL2/SDL_net.h>
+#include <SDL_net.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 #include "network.h"
-#include "SDL2/SDL_image.h"
-#include "SDL2/SDL_ttf.h"
 
 int setupConnection(UDPsocket *sd, IPaddress *srvadd, UDPpacket *p, UDPpacket *p2, int *pnrOfConnections) {
     char ipAddress[25];
