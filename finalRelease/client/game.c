@@ -1,11 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include "game.h"
-#include "network.h"
 #include <string.h>
 #include <SDL_ttf.h>
 #include <SDL_net.h>
 #include <SDL_image.h>
 #include <SDL.h>
+#include "game.h"
+#include "network.h"
 
 #define WIDTH 960
 #define HEIGHT 720
