@@ -16,35 +16,35 @@
 void loadGame(GameState* game, int *pnrOfConnections, UDPsocket *sd, IPaddress *srvadd, UDPpacket *p, UDPpacket *p2, int *pWhich) {
     SDL_Surface *surface = NULL;
     //Load images and create rendering textures from them
-    surface = IMG_Load("tank_sand.png");
+    surface = IMG_Load("resources/tank_sand.png");
     (*game).tankSandTexture = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
-    surface = IMG_Load("tank_sand_dead.png");
+    surface = IMG_Load("resources/tank_sand_dead.png");
     (*game).tankSandTextureDead = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
     
-    surface = IMG_Load("tank_green.png");
+    surface = IMG_Load("resources/tank_green.png");
     (*game).tankGreenTexture = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
-    surface = IMG_Load("tank_green_dead.png");
+    surface = IMG_Load("resources/tank_green_dead.png");
     (*game).tankGreenTextureDead = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
     
-    surface = IMG_Load("tank_dark.png");
+    surface = IMG_Load("resources/tank_dark.png");
     (*game).tankDarkTexture = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
-    surface = IMG_Load("tank_dark_dead.png");
+    surface = IMG_Load("resources/tank_dark_dead.png");
     (*game).tankDarkTextureDead = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
     
-    surface = IMG_Load("tank_blue.png");
+    surface = IMG_Load("resources/tank_blue.png");
     (*game).tankBlueTexture = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
-    surface = IMG_Load("tank_blue_dead.png");
+    surface = IMG_Load("resources/tank_blue_dead.png");
     (*game).tankBlueTextureDead = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
     
-    surface = IMG_Load("bullet.png");
+    surface = IMG_Load("resources/bullet.png");
     (*game).bullet = SDL_CreateTextureFromSurface((*game).renderer, surface);
     SDL_FreeSurface(surface);
     
