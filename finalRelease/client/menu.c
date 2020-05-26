@@ -1,9 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
-
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h">
-
 #include "network.h"
 
 int showMenu(GameState *game)
@@ -33,18 +31,18 @@ int showMenu(GameState *game)
     
     SDL_Rect textRect[3];
     SDL_Rect howTo;
-    textRect[0].x = 320 - tmp[0]->w / 2;
-    textRect[0].y = 175;
+    textRect[0].x = 460 - tmp[0]->w / 2;
+    textRect[0].y = 275;
     textRect[0].w = tmp[0]->w;
     textRect[0].h = tmp[0]->h;
     
-    textRect[1].x = 320 - tmp[1]->w / 2;
-    textRect[1].y = 195 + tmp[0]->h;
+    textRect[1].x = 460 - tmp[1]->w / 2;
+    textRect[1].y = 295 + tmp[0]->h;
     textRect[1].w = tmp[1]->w;
     textRect[1].h = tmp[1]->h;
     
-    textRect[2].x = 320 - tmp[2]->w / 2;
-    textRect[2].y = 215 + tmp[0]->h + tmp[1]->h;
+    textRect[2].x = 460 - tmp[2]->w / 2;
+    textRect[2].y = 315 + tmp[0]->h + tmp[1]->h;
     textRect[2].w = tmp[2]->w;
     textRect[2].h = tmp[2]->h;
     
@@ -83,7 +81,7 @@ int showMenu(GameState *game)
                             if (x >= textRect[1].x && x <= textRect[1].x + textRect[1].w && y >= textRect[1].y && y <= textRect[1].y + textRect[1].h) {
                                 
                                 SDL_Surface *test;
-                                test = IMG_Load("tutorial.png");
+                                test = IMG_Load("resources/tutorial.png");
                                 SDL_Texture *Tex = SDL_CreateTextureFromSurface((*game).renderer, test);
                                 int quit = 0;
                                 while (!quit) {
@@ -107,10 +105,10 @@ int showMenu(GameState *game)
                                                 break;
                                         }
                                     }
-                                    howTo.x = 0;
-                                    howTo.y = 0;
-                                    howTo.w = 640;
-                                    howTo.h = 480;
+                                    howTo.x = 140;
+								    howTo.y = 60;
+								    howTo.w = 640;
+								    howTo.h = 480;
                                     
                                     SDL_SetRenderDrawColor((*game).renderer, 0, 0, 0, 255);
                                     SDL_RenderClear((*game).renderer);
