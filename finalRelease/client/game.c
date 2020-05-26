@@ -4,7 +4,6 @@
 #include <SDL_net.h>
 #include <SDL_image.h>
 #include <SDL.h>
-
 #include "game.h"
 #include "network.h"
 
