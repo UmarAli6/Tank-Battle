@@ -1,6 +1,6 @@
-#include "tank.h"
 #include <string.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
+#include "tank.h"
 #include "game.h"
 
 #define PUBLIC /* empty */
