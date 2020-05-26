@@ -1,8 +1,10 @@
 #pragma once
-#include <stdio.h>
-#include <stdlib.h>
+
 #ifndef bullet_h
 #define bullet_h
+
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct Bullet_type *Bullet;
 
