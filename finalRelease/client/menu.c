@@ -1,12 +1,14 @@
 #define _CRT_SECURE_NO_WARNINGS
+
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h">
+
 #include "network.h"
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_image.h"
-#include "SDL2/SDL_ttf.h"
 
 int showMenu(GameState *game)
 {
-    (*game).font = TTF_OpenFont("/Library/Fonts/arial.ttf", 30);
+    (*game).font = TTF_OpenFont("resources/arial.ttf", 30);
     if (!(*game).font) {
         printf("Couldnt load font!!\n");
         getchar();
