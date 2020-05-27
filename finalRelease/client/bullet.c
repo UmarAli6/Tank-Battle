@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "bullet.h"
 
 #define PUBLIC /* empty */
