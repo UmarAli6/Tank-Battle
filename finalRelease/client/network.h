@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL.h>
+#include <SDL_net.h>
 #include "game.h"
 
 int setupConnection(UDPsocket *sd, IPaddress *srvadd, UDPpacket *p, UDPpacket *p2, int *pnrOfConnections);
