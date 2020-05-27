@@ -57,4 +57,4 @@ void setScore(Tank t, int s);
 
 void resetStructure(Tank t);
 
-#endif /* Tank_h */
+#endif /* tank_h */
