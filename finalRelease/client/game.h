@@ -3,8 +3,6 @@
 #ifndef game_h
 #define game_h
 
-#define MAX_BULLETS 8
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +11,8 @@
 #include <SDL2/SDL_ttf.h>
 #include "tank.h"
 #include "bullet.h"
+
+#define MAX_BULLETS 8
 
 struct Vec2 {
     float x, y;
