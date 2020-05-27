@@ -2,7 +2,6 @@
 
 #ifndef bullet_h
 #define bullet_h
-
 #include <stdio.h>
 #include <stdlib.h>
 
