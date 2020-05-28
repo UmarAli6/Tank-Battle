@@ -1,11 +1,12 @@
-#include "tank.h"
+#define _CRT_SECURE_NO_WARNINGS
 #include <string.h>
 #include <SDL.h>
+#include "tank.h"
 #include "game.h"
 
 #define PUBLIC /* empty */
 #define PRIVATE static
-#define _CRT_SECURE_NO_WARNINGS
+
 
 struct Tank_type {
 	float TANK_POSITION_X;
