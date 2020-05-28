@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include "game.h"
 #include <string.h>
 #include <SDL_ttf.h>
+#include "game.h"
 
 #define WIDTH 960
 #define HEIGHT 720
