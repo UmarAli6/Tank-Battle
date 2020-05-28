@@ -5,7 +5,7 @@
 #include <strsafe.h>
 #include <SDL.h>
 #include <SDL_net.h>
-
+ 
 int main(int argc, char **argv)
 {
 	UDPsocket sd;       /* Socket descriptor */
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 			}
 
 			/* Open a socket */
-			if (!(sd = SDLNet_UDP_Open(port))) //9565 för online
+			if (!(sd = SDLNet_UDP_Open(port))) //9565 fÃ¶r online
 			{
 				fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
 				exit(EXIT_FAILURE);
