@@ -16,7 +16,7 @@ struct Bullet_type {
 PUBLIC Bullet createBullet(float x, float y, float dy, float dx, float a, int o) {
 	Bullet b = malloc(sizeof(struct Bullet_type));
 	b->BULLET_POSITION_X = x + 20;
-	b->BULLET_POSITION_Y = y + 24;
+	b->BULLET_POSITION_Y = y + 20;
 	b->BULLET_DY = dy * -8;
 	b->BULLET_DX = dx * -8;
 	b->BULLET_ANGLE = a;
