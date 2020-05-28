@@ -19,4 +19,4 @@ float getBulletDx(Bullet b);
 float getBulletAngle(Bullet b);
 int bulletOwner(Bullet b);
 
-#endif /* Bullet_h */
+#endif /* bullet_h */
