@@ -5,7 +5,7 @@ int showMenu(GameState *game)
 {
 	(*game).font = TTF_OpenFont("resources/arial.ttf", 30);
 	if (!(*game).font) {
-		printf("Couldnt load font!!\n");
+		printf("Couldn't load font!!\n");
 		getchar();
 		getchar();
 		SDL_Quit();
@@ -29,17 +29,17 @@ int showMenu(GameState *game)
 	SDL_Rect textRect[3];
 	SDL_Rect howTo;
 	textRect[0].x = 460 - tmp[0]->w / 2;
-	textRect[0].y = 195;
+	textRect[0].y = 275;
 	textRect[0].w = tmp[0]->w;
 	textRect[0].h = tmp[0]->h;
 
 	textRect[1].x = 460 - tmp[1]->w / 2;
-	textRect[1].y = 215 + tmp[0]->h;
+	textRect[1].y = 295 + tmp[0]->h;
 	textRect[1].w = tmp[1]->w;
 	textRect[1].h = tmp[1]->h;
 
 	textRect[2].x = 460 - tmp[2]->w / 2;
-	textRect[2].y = 235 + tmp[0]->h + tmp[1]->h;
+	textRect[2].y = 315 + tmp[0]->h + tmp[1]->h;
 	textRect[2].w = tmp[2]->w;
 	textRect[2].h = tmp[2]->h;
 
@@ -103,7 +103,7 @@ int showMenu(GameState *game)
 									}
 								}
 								howTo.x = 140;
-								howTo.y = 50;
+								howTo.y = 60;
 								howTo.w = 640;
 								howTo.h = 480;
 
